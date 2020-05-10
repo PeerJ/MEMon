@@ -1,0 +1,109 @@
+<html>
+<head>
+    <title>MeMon Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <h1>MeMon Dashboard</h1>
+    <h5>Last Updated: {% now 'utc', '%a, %d %b %Y %H:%M:%S' %} </h5>
+    <h3>Error Events</h3>
+    <table class="table">
+        <thead class="thead-dark">
+        <th scope="col">
+            Name
+        </th>
+        <th scope="col">
+            Last Success
+        </th>
+        <th scope="col">
+            Next Due By
+        </th>
+        <th scope="col">Errors</th>
+        </thead>
+        <tbody>
+
+        {% for event in results %}
+            {% if event.Enabled and event.ErrorCount > 0%}
+            <tr scope="row" class="table-danger">
+                <td>
+                    {{ event.Name }}
+                </td>
+                <td>
+                    {% if event.LastSuccessTime %}
+                        {{ event.LastSuccessTime | datetimeformat }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            <td>
+                {% if event.NextBlockTime %}
+                    {{ event.NextBlockTime | datetimeformat }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            <td>
+                {{ event.ErrorCount }}
+            </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <h3>OK Events</h3>
+    <table class="table table-sm">
+        <thead class="thead-dark">
+        <th scope="col">
+            Name
+        </th>
+        <th scope="col">
+            Last Success
+        </th>
+        <th scope="col">
+            Next Due By
+        </th>
+        </thead>
+        <tbody>
+
+        {% for event in results %}
+            {% if event.Enabled %}
+            <tr scope="row">
+                <td>
+                    {{ event.Name }}
+                </td>
+                <td>
+                    {% if event.LastSuccessTime %}
+                        {{ event.LastSuccessTime | datetimeformat }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            <td>
+                {% if event.NextBlockTime %}
+                    {{ event.NextBlockTime | datetimeformat }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+</html>

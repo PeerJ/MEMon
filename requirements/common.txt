@@ -1,3 +1,5 @@
 # Contains requirements common to all environments
 boto==2.35.1
-simplejson==*
+simplejson==3.17.0
+Jinja2==2.11.2
+jinja2-time==0.2.0

@@ -10,6 +10,9 @@ from boto.dynamodb2.fields import HashKey
 from boto.dynamodb2.fields import RangeKey
 import pprint
 import sys
+import os
+import jinja2
+import jinja2_time
 
 MEMON_VERSION = '0.0.1'
 
@@ -108,8 +111,8 @@ class MEMon(object):
             else 0))
         for event in results:
             if (error_only and
-                (not Schema.ErrorCount in event or
-                 event[Schema.ErrorCount] == 0)):
+                    (not Schema.ErrorCount in event or
+                     event[Schema.ErrorCount] == 0)):
                 continue
             if name is None or name == event[Schema.Name]:
                 print "\n%s\n---" % (event[Schema.Name])
@@ -139,6 +142,26 @@ class MEMon(object):
                 except Exception:
                     self.pp.pprint(dict(event))
         print "\n"
+
+    def return_html(self, error_only=False):
+        if os.path.islink(__file__):
+            path = os.path.dirname(os.path.realpath(__file__))
+        else:
+            path = os.path.dirname(__file__)
+        results = sorted(list(self.table.scan()), key=(
+            lambda event:
+            int(event[Schema.NextBlockTime]) if Schema.NextBlockTime in event
+            else 0))
+        j2_env = jinja2.Environment(loader=jinja2.FileSystemLoader(path),
+                                    trim_blocks=True,
+                                    extensions=['jinja2_time.TimeExtension'],
+                                    )
+
+        def datetimeformat(value, format='%H:%M %d/%m/%Y'):
+            return datetime.datetime.fromtimestamp(value).strftime(format)
+
+        j2_env.filters['datetimeformat'] = datetimeformat
+        print j2_env.get_template('dashboard.html.j2').render({'results':results})
 
     def notify_down_events(self):
         results = self.table.scan()
@@ -198,7 +221,7 @@ class MEMon(object):
         if event:
             if Schema.Description in event:
                 message = ("%s\n%s: %s" %
-                          (message, name, event[Schema.Description]))
+                           (message, name, event[Schema.Description]))
 
         message = "%s\n\n--\nMEMon" % (message)
         self.sns_conn.publish(topicArn, message, subject)
@@ -308,7 +331,7 @@ class MEMon(object):
 
             print data
 
-            #self.table.put_item(data)
+            # self.table.put_item(data)
             item = self.table.new_item(hash_key=name, attrs=data)
             item.put()
 
@@ -394,7 +417,7 @@ class MEMon(object):
         parser.set_defaults(enabled=True)
         parser.add_argument('action',
                             choices=['init', 'send', 'poll',
-                                     'config', 'show', 'version'],
+                                     'config', 'show', 'version' , 'html'],
                             help='Action to perform')
         parser.add_argument('name',
                             nargs='?',
@@ -445,6 +468,8 @@ class MEMon(object):
                         args.initial_time)
         elif args.action == 'show':
             self.show(args.name, args.only_errors)
+        elif args.action == 'html':
+            self.return_html(args.only_errors)
         elif args.action == 'version':
             print "MEMon Version %s" % (MEMON_VERSION)
             sys.exit(0)
@@ -470,7 +495,7 @@ def mktime(timestring):
         print e
         raise e
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     memon = MEMon()
     memon.main()
